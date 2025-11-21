@@ -1,16 +1,9 @@
-// src/api/axios.js
-import axios from "axios";
-
-// Backend base URL
+import axios from "axios
 const API_BASE = "https://rentkar-backend.vercel.app/api";
-
-// Create axios instance
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 15000, // 15 seconds timeout
+  timeout: 15000,
 });
-
-// Request interceptor: add token if present
 api.interceptors.request.use(
   (config) => {
     const saved = localStorage.getItem("rentkar_admin");
@@ -28,21 +21,16 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
-// Response interceptor: handle auth errors globally
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    // Network or server unavailable
     if (!error.response) {
       alert("Network error: Backend not reachable. Please try again later.");
       return Promise.reject(error);
     }
-
-    // Unauthorized or forbidden
     if (error.response.status === 401 || error.response.status === 403) {
       localStorage.removeItem("rentkar_admin");
-      window.location.href = "/"; // redirect to login
+      window.location.href = "/"; 
     }
 
     return Promise.reject(error);
