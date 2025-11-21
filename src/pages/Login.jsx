@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
@@ -18,15 +17,11 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post("/auth/login", { email, password });
-      // backend expected response: { token, user, role, ... }
       const data = res.data;
-      // minimal safety check
       if (!data || !data.token) {
         throw new Error("Login failed: token missing");
       }
-      // Save in context/localStorage
       login(data);
-      // Redirect to dashboard
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
