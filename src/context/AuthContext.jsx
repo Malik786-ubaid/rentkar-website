@@ -4,8 +4,6 @@ export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-  // token check on app load
   useEffect(() => {
     const savedUser = localStorage.getItem("rentkar_admin");
     if (savedUser) {
