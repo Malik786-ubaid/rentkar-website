@@ -1,8 +1,13 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App.jsx";
+import AuthProvider from "./context/AuthContext.jsx";
 
-createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <div style={{padding:20}}>Testing React render — If you see this, React core is fine.</div>
-  </React.StrictMode>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </BrowserRouter>
 );
