@@ -1,10 +1,24 @@
-import React from "react";
+import React, { useContext } from "react";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const Navbar = () => {
+  const { user, logout } = useContext(AuthContext);
+
+  if (!user) return null; 
+
   return (
-    <div style={{ height: 60, background: "#1976d2", color: "#fff", display: "flex", alignItems: "center", padding: "0 20px" }}>
-      <h2>RentKar Admin Panel</h2>
-    </div>
+    <header style={{
+      height: "60px",
+      background: "#1f2937",
+      color: "#fff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "0 20px"
+    }}>
+      <h1>Dashboard</h1>
+      <button onClick={logout} style={{ padding: "5px 10px", cursor: "pointer" }}>Logout</button>
+    </header>
   );
 };
 
