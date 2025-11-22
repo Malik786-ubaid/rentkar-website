@@ -1,9 +1,11 @@
-import axios from "axios
+import axios from "axios";
 const API_BASE = "https://rentkar-backend.vercel.app/api";
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 15000,
+  timeout: 15000, 
 });
+
+
 api.interceptors.request.use(
   (config) => {
     const saved = localStorage.getItem("rentkar_admin");
@@ -21,6 +23,7 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
 api.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -28,9 +31,10 @@ api.interceptors.response.use(
       alert("Network error: Backend not reachable. Please try again later.");
       return Promise.reject(error);
     }
+
     if (error.response.status === 401 || error.response.status === 403) {
       localStorage.removeItem("rentkar_admin");
-      window.location.href = "/"; 
+      window.location.href = "/";
     }
 
     return Promise.reject(error);
