@@ -1,102 +1,46 @@
 import React, { useContext } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
+import { Routes, Route } from "react-router-dom";
+import { AuthContext } from "./context/AuthContext.jsx";
+import Sidebar from "./component/Sidebar";
+import Navbar from "./component/Navbar";
 import Dashboard from "./pages/Dashboard";
-import OrdersList from "./pages/orders/OrdersList";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import NotFound from "./pages/NotFound";
+import EditUser from "./pages/users/EditUser";
+import ProductList from "./pages/products/ProductList";
 import AddProduct from "./pages/products/AddProduct";
 import EditProduct from "./pages/products/EditProduct";
-import ProductList from "./pages/products/ProductList";
-import EditUser from "./pages/users/EditUser";
-import Navbar from "./component/Navbar";
-import Sidebar from "./component/Sidebar";
-import { AuthContext } from "./context/AuthContext";
-const PrivateRoute = ({ children }) => {
+import OrdersList from "./pages/orders/OrdersList";
+import PrivateRoute from "./routes/PrivateRoute";
+import AdminRoute from "./routes/AdminRoute";
+
+const App = () => {
   const { user } = useContext(AuthContext);
-  return user ? children : <Navigate to="/" replace />;
-};
 
-const Layout = ({ children }) => (
-  <div style={{ display: "flex", minHeight: "100vh" }}>
-    <Sidebar />
-    <div style={{ flex: 1 }}>
-      <Navbar />
-      <div style={{ padding: 20 }}>{children}</div>
-    </div>
-  </div>
-);
-
-function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
+    <div className="app-container" style={{ display: "flex" }}>
+      
+      {user && <Sidebar />}
 
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <Dashboard />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/orders"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <OrdersList />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/products"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <ProductList />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/products/add"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <AddProduct />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/products/edit/:id"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <EditProduct />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-     
-      <Route
-        path="/users/edit/:id"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <EditUser />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="*"
-        element={<h1 style={{ textAlign: "center", marginTop: 50 }}>404 - Page Not Found</h1>}
-      />
-    </Routes>
+      <div style={{ flex: 1 }}>
+        {user && <Navbar />}
+
+        <Routes>
+    
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/users/edit/:id" element={<AdminRoute><EditUser /></AdminRoute>} />
+          <Route path="/products" element={<PrivateRoute><ProductList /></PrivateRoute>} />
+          <Route path="/products/add" element={<AdminRoute><AddProduct /></AdminRoute>} />
+          <Route path="/products/edit/:id" element={<AdminRoute><EditProduct /></AdminRoute>} />
+          <Route path="/orders" element={<PrivateRoute><OrdersList /></PrivateRoute>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </div>
   );
-}
+};
 
 export default App;
