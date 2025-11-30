@@ -1,85 +1,107 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 
 const ProductsList = () => {
-  const [products, setProducts] = useState([
-    { id: 1, name: "Product A", price: "$100", stock: 50 },
-    { id: 2, name: "Product B", price: "$150", stock: 30 },
-    { id: 3, name: "Product C", price: "$200", stock: 20 },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const token = JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
+  const headers = { Authorization: `Bearer ${token}` };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter((p) => p.id !== id));
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("https://rentkar-backend.vercel.app/api/products", { headers });
+      setProducts(res.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoading(false);
     }
   };
 
-  return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h2 style={{ color: "#111827" }}>Products</h2>
-        <Link to="/products/add" style={{ padding: "10px 20px", background: "#2563eb", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>
-          Add Product
-        </Link>
-      </div>
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
 
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-          <thead style={{ background: "#f3f4f6" }}>
-            <tr>
-              <th style={thStyle}>ID</th>
+    try {
+      await axios.delete(`https://rentkar-backend.vercel.app/api/products/${id}`, { headers });
+      setProducts(products.filter(p => p._id !== id));
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product.");
+    }
+  };
+
+  if (loading) return <p style={{ padding: "20px" }}>Loading products...</p>;
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1>Products</h1>
+      <Link to="/products/add" style={addBtnStyle}>Add Product</Link>
+
+      {products.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+          <thead>
+            <tr style={{ background: "#2563eb", color: "#fff" }}>
               <th style={thStyle}>Name</th>
+              <th style={thStyle}>Category</th>
               <th style={thStyle}>Price</th>
-              <th style={thStyle}>Stock</th>
               <th style={thStyle}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
-              <tr key={product.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <td style={tdStyle}>{product.id}</td>
-                <td style={tdStyle}>{product.name}</td>
-                <td style={tdStyle}>{product.price}</td>
-                <td style={tdStyle}>{product.stock}</td>
+            {products.map(p => (
+              <tr key={p._id} style={{ borderBottom: "1px solid #ccc" }}>
+                <td style={tdStyle}>{p.name}</td>
+                <td style={tdStyle}>{p.category}</td>
+                <td style={tdStyle}>{p.price}</td>
                 <td style={tdStyle}>
-                  <Link
-                    to={`/products/edit/${product.id}`}
-                    style={{ marginRight: "10px", padding: "5px 10px", background: "#fbbf24", color: "#fff", borderRadius: "4px", textDecoration: "none" }}
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    style={{ padding: "5px 10px", background: "#dc2626", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                  >
-                    Delete
-                  </button>
+                  <Link to={`/products/edit/${p._id}`} style={editBtnStyle}>Edit</Link>
+                  <button onClick={() => handleDelete(p._id)} style={deleteBtnStyle}>Delete</button>
                 </td>
               </tr>
             ))}
-            {products.length === 0 && (
-              <tr>
-                <td colSpan="5" style={{ padding: "15px", textAlign: "center", color: "#6b7280" }}>
-                  No products available.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
-      </div>
+      )}
     </div>
   );
 };
-const thStyle = {
-  padding: "12px",
-  textAlign: "left",
-  fontWeight: "600",
-  color: "#374151",
-};
 
-const tdStyle = {
-  padding: "12px",
-  color: "#111827",
+const thStyle = { padding: "10px", textAlign: "left" };
+const tdStyle = { padding: "10px" };
+const addBtnStyle = {
+  display: "inline-block",
+  marginBottom: "10px",
+  padding: "8px 12px",
+  background: "#2563eb",
+  color: "#fff",
+  borderRadius: "4px",
+  textDecoration: "none",
+};
+const editBtnStyle = {
+  padding: "5px 10px",
+  marginRight: "5px",
+  background: "#4ade80",
+  color: "#fff",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  textDecoration: "none",
+};
+const deleteBtnStyle = {
+  padding: "5px 10px",
+  background: "red",
+  color: "#fff",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer"
 };
 
 export default ProductsList;
