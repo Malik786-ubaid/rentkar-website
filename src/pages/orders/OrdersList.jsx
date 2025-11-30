@@ -1,58 +1,72 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const OrdersList = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const token = JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
+  const headers = { Authorization: `Bearer ${token}` };
+
   useEffect(() => {
-    const sampleOrders = [
-      { id: 1, customer: "Ali", product: "Honda Civic", quantity: 1, total: 5000, status: "Completed" },
-      { id: 2, customer: "Sara", product: "Toyota Corolla", quantity: 2, total: 8000, status: "Pending" },
-      { id: 3, customer: "Usman", product: "Suzuki Swift", quantity: 1, total: 3000, status: "Cancelled" },
-    ];
-    setOrders(sampleOrders);
+    const fetchOrders = async () => {
+      try {
+        const res = await axios.get("https://rentkar-backend.vercel.app/api/stores", { headers });
+        setOrders(res.data || []);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setLoading(false);
+        alert("Failed to fetch orders.");
+      }
+    };
+
+    fetchOrders();
   }, []);
+
+  if (loading) {
+    return <p>Loading orders...</p>;
+  }
+
+  if (!orders.length) {
+    return <p>No orders found.</p>;
+  }
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2 style={{ marginBottom: "20px" }}>Orders List</h2>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "#1f2937", color: "#fff" }}>
-              <th style={thStyle}>Order ID</th>
-              <th style={thStyle}>Customer</th>
-              <th style={thStyle}>Product</th>
-              <th style={thStyle}>Quantity</th>
-              <th style={thStyle}>Total ($)</th>
-              <th style={thStyle}>Status</th>
+      <h1>Orders List</h1>
+      <table style={tableStyle}>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Total Price</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((order) => (
+            <tr key={order._id}>
+              <td>{order._id}</td>
+              <td>{order.userName}</td>
+              <td>{order.productName}</td>
+              <td>{order.quantity}</td>
+              <td>${order.totalPrice}</td>
+              <td>{order.status}</td>
             </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} style={{ borderBottom: "1px solid #ddd" }}>
-                <td style={tdStyle}>{order.id}</td>
-                <td style={tdStyle}>{order.customer}</td>
-                <td style={tdStyle}>{order.product}</td>
-                <td style={tdStyle}>{order.quantity}</td>
-                <td style={tdStyle}>{order.total}</td>
-                <td style={{ ...tdStyle, color: order.status === "Completed" ? "green" : order.status === "Pending" ? "orange" : "red" }}>
-                  {order.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
 
-const thStyle = {
-  padding: "12px",
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
   textAlign: "left",
-};
-
-const tdStyle = {
-  padding: "12px",
 };
 
 export default OrdersList;
