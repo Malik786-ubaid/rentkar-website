@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext.jsx";
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
 
-  if (!user) return null; 
+  if (!user) return null;
 
   return (
     <header style={{
@@ -17,7 +17,7 @@ const Navbar = () => {
       padding: "0 20px"
     }}>
       <h1>Dashboard</h1>
-      <button onClick={logout} style={{ padding: "5px 10px", cursor: "pointer" }}>Logout</button>
+      <button onClick={logout}>Logout</button>
     </header>
   );
 };
