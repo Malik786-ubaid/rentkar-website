@@ -1,75 +1,55 @@
-import React from "react";
+import React, { useEffect, useState, useContext } from "react";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const Dashboard = () => {
+  const { user } = useContext(AuthContext);
+
+  const [totals, setTotals] = useState({
+    products: 0,
+    users: 0,
+    orders: 0,
+  });
+
+  useEffect(() => {
+    const fetchTotals = async () => {
+      try {
+        const token = JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
+        const headers = { Authorization: `Bearer ${token}` };
+        const productsRes = await axios.get("https://rentkar-backend.vercel.app/api/products", { headers });
+        const usersRes = await axios.get("https://rentkar-backend.vercel.app/api/users", { headers });
+        const ordersRes = await axios.get("https://rentkar-backend.vercel.app/api/stores", { headers }); // assuming orders endpoint
+
+        setTotals({
+          products: productsRes.data.length || 0,
+          users: usersRes.data.length || 0,
+          orders: ordersRes.data.length || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchTotals();
+  }, []);
+
   return (
-    <div style={styles.container}>
-      <h1 style={styles.heading}>Dashboard Overview</h1>
-
-      <div style={styles.cardsWrapper}>
-        
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Total Products</h2>
-          <p style={styles.cardValue}>120</p>
-        </div>
-
-        <div style={{ ...styles.card, background: "#2563eb" }}>
-          <h2 style={styles.cardTitle}>Total Orders</h2>
-          <p style={styles.cardValue}>85</p>
-        </div>
-
-        <div style={{ ...styles.card, background: "#16a34a" }}>
-          <h2 style={styles.cardTitle}>Active Users</h2>
-          <p style={styles.cardValue}>42</p>
-        </div>
-
-        <div style={{ ...styles.card, background: "#dc2626" }}>
-          <h2 style={styles.cardTitle}>Pending Approvals</h2>
-          <p style={styles.cardValue}>7</p>
-        </div>
-
+    <div style={{ padding: "20px" }}>
+      <h1>Dashboard</h1>
+      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+        <Card title="Products" count={totals.products} />
+        <Card title="Users" count={totals.users} />
+        <Card title="Orders" count={totals.orders} />
       </div>
     </div>
   );
 };
 
-const styles = {
-  container: {
-    padding: "30px",
-    background: "#f3f4f6",
-    minHeight: "100vh",
-  },
-  heading: {
-    marginBottom: "20px",
-    color: "#111827",
-    fontSize: "28px",
-    fontWeight: "700",
-  },
-  cardsWrapper: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "20px",
-  },
-  card: {
-    background: "#1f2937",
-    padding: "25px",
-    borderRadius: "10px",
-    color: "white",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
-    transition: "transform 0.2s",
-    cursor: "pointer",
-  },
-  cardTitle: {
-    fontSize: "18px",
-    opacity: "0.9",
-    marginBottom: "10px",
-  },
-  cardValue: {
-    fontSize: "32px",
-    fontWeight: "700",
-  }
-};
-styles.card["&:hover"] = {
-  transform: "scale(1.05)",
-};
+const Card = ({ title, count }) => (
+  <div style={{ flex: 1, padding: "20px", background: "#2563eb", color: "#fff", borderRadius: "8px", textAlign: "center" }}>
+    <h2>{title}</h2>
+    <p style={{ fontSize: "24px", marginTop: "10px" }}>{count}</p>
+  </div>
+);
 
 export default Dashboard;
