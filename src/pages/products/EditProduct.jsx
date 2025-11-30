@@ -1,42 +1,92 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
 const EditProduct = () => {
-  const { id } = useParams();
+  const { productId } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState({ name: "", price: "", stock: "" });
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [price, setPrice] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const token = JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
+  const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    setProduct({ name: `Product ${id}`, price: `$${100 + id}`, stock: 20 + parseInt(id) });
-  }, [id]);
+    const fetchProduct = async () => {
+      try {
+        const res = await axios.get(
+          `https://rentkar-backend.vercel.app/api/products/${productId}`,
+          { headers }
+        );
+        setName(res.data.name || "");
+        setCategory(res.data.category || "");
+        setPrice(res.data.price || "");
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        alert("Failed to fetch product details.");
+      }
+    };
+    fetchProduct();
+  }, [productId]);
 
-  const handleChange = (e) => {
-    setProduct({ ...product, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Product updated successfully!");
-    navigate("/products");
+    try {
+      setLoading(true);
+      await axios.put(
+        `https://rentkar-backend.vercel.app/api/products/${productId}`,
+        { name, category, price },
+        { headers }
+      );
+      setLoading(false);
+      alert("Product updated successfully!");
+      navigate("/products");
+    } catch (error) {
+      console.error("Error updating product:", error);
+      setLoading(false);
+      alert("Failed to update product.");
+    }
   };
 
   return (
-    <div style={{ maxWidth: "500px", margin: "0 auto", background: "#fff", padding: "30px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
-      <h2 style={{ marginBottom: "20px", color: "#111827" }}>Edit Product</h2>
-      <form onSubmit={handleSubmit}>
+    <div style={{ padding: "20px" }}>
+      <h1>Edit Product</h1>
+      <form onSubmit={handleSubmit} style={{ maxWidth: "400px" }}>
         <div style={{ marginBottom: "15px" }}>
           <label>Name</label>
-          <input type="text" name="name" value={product.name} onChange={handleChange} required style={inputStyle} />
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <div style={{ marginBottom: "15px" }}>
+          <label>Category</label>
+          <input
+            type="text"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+            style={inputStyle}
+          />
         </div>
         <div style={{ marginBottom: "15px" }}>
           <label>Price</label>
-          <input type="text" name="price" value={product.price} onChange={handleChange} required style={inputStyle} />
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+            style={inputStyle}
+          />
         </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label>Stock</label>
-          <input type="number" name="stock" value={product.stock} onChange={handleChange} required style={inputStyle} />
-        </div>
-        <button type="submit" style={buttonStyle}>Update Product</button>
+        <button type="submit" style={buttonStyle} disabled={loading}>
+          {loading ? "Updating..." : "Update Product"}
+        </button>
       </form>
     </div>
   );
@@ -44,16 +94,15 @@ const EditProduct = () => {
 
 const inputStyle = {
   width: "100%",
-  padding: "10px",
+  padding: "8px",
   marginTop: "5px",
   borderRadius: "4px",
   border: "1px solid #ccc",
 };
 
 const buttonStyle = {
-  width: "100%",
-  padding: "10px",
-  background: "#fbbf24",
+  padding: "10px 15px",
+  background: "#2563eb",
   color: "#fff",
   border: "none",
   borderRadius: "4px",
