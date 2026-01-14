@@ -1,85 +1,87 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
+import AuthContext from "../../context/useAuthContext";
 
 const UsersList = () => {
+  const { user } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
+  const [error, setError] = useState(null);
+
+  const token = user?.token || JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      if (!user || user.role !== "admin") {
+        setLoading(false);
+        return;
+      }
+      try {
+        const response = await axios.get("https://rentkar-backend.vercel.app/api/users", { headers });
+        setUsers(response.data || []);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch users");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUsers();
-  }, []);
+  }, [user, headers]);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get("https://rentkar-backend.vercel.app/api/users", { headers });
-      setUsers(res.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-
+  const deleteUser = async (id) => {
+    if (!user || user.role !== "admin") return;
     try {
       await axios.delete(`https://rentkar-backend.vercel.app/api/users/${id}`, { headers });
-      setUsers(users.filter(user => user._id !== id));
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user.");
+      setUsers(users.filter(u => u._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete user");
     }
   };
 
-  if (loading) return <p style={{ padding: "20px" }}>Loading users...</p>;
+  if (!user || user.role !== "admin") {
+    return <p style={{ textAlign: "center", marginTop: "50px" }}>Access Denied: Admins only</p>;
+  }
+
+  if (loading) return <p style={{ textAlign: "center", marginTop: "50px" }}>Loading users...</p>;
+  if (error) return <p style={{ textAlign: "center", marginTop: "50px" }}>{error}</p>;
+  if (!users.length) return <p style={{ textAlign: "center", marginTop: "50px" }}>No users found.</p>;
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Users</h1>
-      {users.length === 0 ? (
-        <p>No users found.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
-          <thead>
-            <tr style={{ background: "#2563eb", color: "#fff" }}>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Admin</th>
-              <th style={thStyle}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(u => (
-              <tr key={u._id} style={{ borderBottom: "1px solid #ccc" }}>
-                <td style={tdStyle}>{u.name}</td>
-                <td style={tdStyle}>{u.email}</td>
-                <td style={tdStyle}>{u.isAdmin ? "Yes" : "No"}</td>
-                <td style={tdStyle}>
-                  <button onClick={() => handleDelete(u._id)} style={deleteBtnStyle}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <h1 style={{ color: "#1e3a8a" }}>Users List</h1>
+      <ul>
+        {users.map(u => (
+          <li key={u._id} style={{ marginBottom: "10px" }}>
+            {u.name || "No Name"} - {u.email} {" "}
+            <Link to={`/users/edit/${u._id}`} style={editButtonStyle}>Edit</Link>
+            <button onClick={() => deleteUser(u._id)} style={deleteButtonStyle}>Delete</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
-const thStyle = { padding: "10px", textAlign: "left" };
-const tdStyle = { padding: "10px" };
-const deleteBtnStyle = {
-  padding: "5px 10px",
-  background: "red",
+const editButtonStyle = {
+  padding: "3px 8px",
+  marginRight: "5px",
+  background: "#2563eb",
   color: "#fff",
+  borderRadius: "3px",
+  textDecoration: "none",
+};
+
+const deleteButtonStyle = {
+  padding: "3px 8px",
+  background: "#ef4444",
+  color: "#fff",
+  borderRadius: "3px",
   border: "none",
-  borderRadius: "4px",
-  cursor: "pointer"
+  cursor: "pointer",
 };
 
 export default UsersList;
-
