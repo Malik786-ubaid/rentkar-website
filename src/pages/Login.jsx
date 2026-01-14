@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AuthContext from "../context/useAuthContext"; 
+import "./Login.css";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -9,114 +10,54 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      const res = await fetch("https://rentkar-backend.vercel.app/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await login(email, password); 
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Invalid email or password");
-        return;
+      if (res.success) {
+        navigate("/dashboard");
+      } else {
+        setError(res.error);
       }
-
-      login(data); 
-      navigate("/");
-
-    } catch (error) {
-      setError("Something went wrong");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <form style={styles.box} onSubmit={handleSubmit}>
-        
-        <h2 style={styles.heading}>Admin Login</h2>
-
-        {error && <p style={styles.error}>{error}</p>}
-
+    <div className="login-container">
+      <h2>Admin Login</h2>
+      <form onSubmit={handleLogin}>
         <input
           type="email"
-          placeholder="Enter email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-          autoComplete="new-email"
+          required
         />
-
         <input
           type="password"
-          placeholder="Enter password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-          autoComplete="new-password"
+          required
         />
-
-        <button type="submit" style={styles.button}>Login</button>
-
-        <p style={{ marginTop: "10px" }}>
-          Don’t have an account? <Link to="/signup">Signup</Link>
-        </p>
-
+        {error && <p className="error">{error}</p>}
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );
 };
 
 export default Login;
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    background: "#f3f4f6",
-  },
-  box: {
-    width: "350px",
-    background: "white",
-    padding: "25px",
-    borderRadius: "10px",
-    boxShadow: "0px 0px 10px rgba(0,0,0,0.1)",
-    textAlign: "center",
-  },
-  heading: {
-    marginBottom: "15px",
-  },
-  input: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "12px",
-    borderRadius: "6px",
-    border: "1px solid #ddd",
-  },
-  button: {
-    width: "100%",
-    padding: "12px",
-    background: "#2563eb",
-    border: "none",
-    color: "white",
-    fontSize: "16px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-  error: {
-    background: "#fee2e2",
-    padding: "10px",
-    borderRadius: "6px",
-    color: "#b91c1c",
-    marginBottom: "10px",
-  },
-};
