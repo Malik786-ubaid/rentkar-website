@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -9,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Wrap in setTimeout to avoid synchronous setState warning
     const loadUser = () => {
       const storedUser = localStorage.getItem("rentkar_admin");
       if (storedUser) {
