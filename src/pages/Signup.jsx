@@ -1,77 +1,62 @@
 import React, { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import AuthContext from "../context/useAuthContext"; 
+import "./Signup.css";
 
 const Signup = () => {
-  const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
-      const res = await fetch("https://rentkar-backend.vercel.app/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, email, password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Signup failed");
-        return;
-      }
-
-      login(data);
-      navigate("/");
-
+      await register(email, password);
+      navigate("/login");
     } catch (err) {
-      setError("Something went wrong");
+      console.error(err);
+      setError(err.response?.data?.message || "Signup failed");
     }
   };
 
   return (
-    <div className="auth-container">
-      <form className="auth-box" onSubmit={handleSignup}>
-        <h2>Create Account</h2>
-
-        {error && <p className="error-message">{error}</p>}
-
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-
+    <div className="signup-container">
+      <h2>Admin Signup</h2>
+      <form onSubmit={handleSignup}>
         <input
           type="email"
-          placeholder="Enter Email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-
         <input
           type="password"
-          placeholder="Create Password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-
-        <button type="submit">Sign Up</button>
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        {error && <p className="error">{error}</p>}
+        <button type="submit">Signup</button>
       </form>
     </div>
   );
