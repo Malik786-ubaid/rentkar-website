@@ -1,51 +1,86 @@
-import React, { useState } from "react";
+// src/pages/users/AddUser.jsx
+import React, { useState, useContext } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import AuthContext from "../../context/useAuthContext";
 
-const OrdersList = () => {
-  const [orders] = useState([
-    { id: 1, customer: "Ali", total: "$150", status: "Pending" },
-    { id: 2, customer: "Attiq", total: "$250", status: "Completed" },
-    { id: 3, customer: "Huzaifa", total: "$100", status: "Processing" },
-  ]);
+const AddUser = () => {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
+  const [loading, setLoading] = useState(false);
+
+  const token = user?.token || JSON.parse(localStorage.getItem("rentkar_admin"))?.token || "";
+  const headers = { Authorization: `Bearer ${token}` };
+
+  if (!user || user.role !== "admin") {
+    return <p style={{ textAlign: "center", marginTop: "50px" }}>Access Denied: Admins only</p>;
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!name || !email || !password || !role) {
+      alert("All fields are required!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.post(
+        "https://rentkar-backend.vercel.app/api/users",
+        { name, email, password, role },
+        { headers }
+      );
+      alert("User added successfully!");
+      navigate("/users");
+    } catch (error) {
+      console.error("Error adding user:", error);
+      alert("Failed to add user.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "20px", color: "#111827" }}>Orders</h2>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-          <thead style={{ background: "#f3f4f6" }}>
-            <tr>
-              <th style={thStyle}>ID</th>
-              <th style={thStyle}>Customer</th>
-              <th style={thStyle}>Total</th>
-              <th style={thStyle}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <td style={tdStyle}>{order.id}</td>
-                <td style={tdStyle}>{order.customer}</td>
-                <td style={tdStyle}>{order.total}</td>
-                <td style={tdStyle}>{order.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div style={{ padding: "20px" }}>
+      <h1 style={{ color: "#1e3a8a" }}>Add New User</h1>
+      <form onSubmit={handleSubmit} style={formStyle}>
+        <div style={inputGroupStyle}>
+          <label>Name</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} required />
+        </div>
+        <div style={inputGroupStyle}>
+          <label>Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+        </div>
+        <div style={inputGroupStyle}>
+          <label>Password</label>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+        </div>
+        <div style={inputGroupStyle}>
+          <label>Role</label>
+          <select value={role} onChange={(e) => setRole(e.target.value)} style={inputStyle} required>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button type="submit" style={buttonStyle} disabled={loading}>
+          {loading ? "Adding..." : "Add User"}
+        </button>
+      </form>
     </div>
   );
 };
 
-const thStyle = {
-  padding: "12px",
-  textAlign: "left",
-  fontWeight: "600",
-  color: "#374151",
-};
+const formStyle = { maxWidth: "400px", marginTop: "20px" };
+const inputGroupStyle = { marginBottom: "15px", display: "flex", flexDirection: "column" };
+const inputStyle = { padding: "10px", borderRadius: "5px", border: "1px solid #ccc", marginTop: "5px" };
+const buttonStyle = { padding: "10px 15px", background: "#10b981", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" };
 
-const tdStyle = {
-  padding: "12px",
-  color: "#111827",
-};
-
-export default OrdersList;
+export default AddUser;
+3
